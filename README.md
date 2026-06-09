@@ -6,7 +6,7 @@ Mide la emoción, riesgo de backlash y predicción viral de tweets, prompts, ema
 
 ## 🌐 Demo en vivo
 
-[https://axiom-systemstech.github.io/axiom-void-pulse/](https://axiom-systemstech.github.io/axiom-void-pulse/)
+[https://axiom-systemstech.github.io/axiomvoidpulse/](https://axiom-systemstech.github.io/axiomvoidpulse/)
 
 ## 🎯 ¿Qué hace?
 
@@ -28,7 +28,7 @@ La web es gratis. Si quieres integrar el análisis en tu infraestructura, el mis
 
 40€ (una vez, código completo + Dockerfile)
 
-🛒 [Comprar en Gumroad](https://manuelaxiomsystems.gumroad.com/l/void-pulse)
+🛒 [Comprar en Gumroad](https://manuelaxiomsystems.gumroad.com/)
 
 ## 📄 Licencia
 
