@@ -1,0 +1,15 @@
+{
+  "name": "AXIOM VOID PULSE",
+  "short_name": "VoidPulse",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#03060a",
+  "background_color": "#03060a",
+  "icons": [
+    {
+      "src": "assets/favicon.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
