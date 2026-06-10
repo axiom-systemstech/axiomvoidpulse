@@ -1,33 +1,99 @@
 // ============================================
-// AXIOM VOID PULSE CORE v1.0
-// Motor de análisis emocional y de riesgo
+// AXIOM VOID PULSE CORE v2.0
+// Motor de análisis emocional mejorado
+// Detecta CUALQUIER texto por reglas de forma + emociones
 // 100% local - Sin dependencias externas
 // ============================================
 
 const VoidPulseCore = (function() {
     
-    // Diccionario de emociones y palabras clave
+    // Diccionario de emociones (expandido)
     const EMOTION_KEYWORDS = {
-        alegria: ['feliz', 'genial', 'increíble', 'excelente', 'amor', '❤️', '🎉', 'gracias', 'maravilloso', 'contento', 'alegría', 'sonrisa', 'celebrar'],
-        ira: ['odio', 'rabia', 'enfadado', 'puta', 'mierda', '💢', '🤬', 'imbécil', 'basura', 'asco', 'indignado', 'furia', 'colérico'],
-        tristeza: ['triste', 'deprimido', 'llorar', '😢', '💔', 'solitario', 'vacío', 'melancolía', 'pena', 'dolor', 'desgracia'],
-        miedo: ['miedo', 'terror', 'pánico', '😨', '😱', 'alarma', 'peligro', 'amenaza', 'inseguro', 'preocupado', 'ansiedad'],
-        sorpresa: ['sorpresa', 'impactante', '😲', 'increíble', 'wow', '😱', 'impresionante', 'inesperado', 'asombroso'],
-        confianza: ['seguro', 'confianza', 'fuerte', 'poder', 'dominante', '💪', 'claro', 'decidido', 'firme', 'garantía']
+        alegria: ['feliz', 'genial', 'increíble', 'excelente', 'amor', '❤️', '🎉', 'gracias', 'maravilloso', 'contento', 'alegría', 'sonrisa', 'celebrar', 'disfrutar', 'fantástico', 'perfecto', 'felicidad', 'emocionado', '❤️', '😊', '😁', '🥳'],
+        ira: ['odio', 'rabia', 'enfadado', 'puta', 'mierda', '💢', '🤬', 'imbécil', 'basura', 'asco', 'indignado', 'furia', 'colérico', 'cabrón', 'joder', 'detesto', 'asqueroso', '😡', '👿'],
+        tristeza: ['triste', 'deprimido', 'llorar', '😢', '💔', 'solitario', 'vacío', 'melancolía', 'pena', 'dolor', 'desgracia', 'sufrir', 'lamento', 'fracaso', 'perdí', 'adiós'],
+        miedo: ['miedo', 'terror', 'pánico', '😨', '😱', 'alarma', 'peligro', 'amenaza', 'inseguro', 'preocupado', 'ansiedad', 'nervioso', 'susto', 'horror'],
+        sorpresa: ['sorpresa', 'impactante', '😲', 'wow', 'impresionante', 'inesperado', 'asombroso', 'increíble', 'vaya', 'oh'],
+        confianza: ['seguro', 'confianza', 'fuerte', 'poder', 'dominante', '💪', 'claro', 'decidido', 'firme', 'garantía', 'absolutamente', 'definitivamente']
     };
     
-    // Palabras de alto riesgo para backlash
+    // Palabras de backlash
     const BACKLASH_KEYWORDS = [
         'polémico', 'controversial', 'odio', 'puta', 'mierda', 'imbécil', 'basura',
         'feminista', 'machista', 'racista', 'fascista', 'comunista', 'nazi',
-        'violencia', 'muerte', 'matar', 'asesino', 'crimen', 'corrupto'
+        'violencia', 'muerte', 'matar', 'asesino', 'crimen', 'corrupto', 'que te jodan'
     ];
     
-    // Palabras para predicción viral
+    // Palabras virales
     const VIRAL_KEYWORDS = [
         '🔥', '💣', '🚀', 'exclusiva', 'nuevo', 'revolucionario', 'nunca antes',
-        'descubrimiento', 'impactante', 'rompe récords', 'histórico'
+        'descubrimiento', 'impactante', 'rompe récords', 'histórico', 'viral', 'tendencia'
     ];
+    
+    // Palabras positivas para mejorar versión potenciada
+    const POSITIVE_BOOST = ['increíble', 'fantástico', 'espectacular', 'genial', 'maravilloso', 'excelente', 'brutal', 'impresionante'];
+    
+    // ========== NUEVAS REGLAS DE FORMA ==========
+    
+    function analyzeForm(text) {
+        let formScore = 0;
+        let details = [];
+        
+        const length = text.length;
+        const wordCount = text.split(/\s+/).length;
+        
+        // Longitud
+        if (length < 20) {
+            formScore -= 10;
+            details.push("Texto muy corto");
+        } else if (length > 500) {
+            formScore -= 15;
+            details.push("Texto muy largo");
+        } else if (length >= 50 && length <= 200) {
+            formScore += 10;
+            details.push("Longitud óptima");
+        }
+        
+        // MAYÚSCULAS
+        const upperCount = (text.match(/[A-ZÁÉÍÓÚÜ]{3,}/g) || []).length;
+        const upperRatio = upperCount * 5;
+        if (upperRatio > 20) {
+            formScore += Math.min(upperRatio, 25);
+            details.push("Uso intensivo de mayúsculas");
+        } else if (upperRatio > 5) {
+            formScore += upperRatio;
+            details.push("Algunas mayúsculas");
+        }
+        
+        // Signos de exclamación
+        const exclamCount = (text.match(/!{2,}/g) || []).length;
+        if (exclamCount > 0) {
+            formScore += exclamCount * 8;
+            details.push("Múltiples exclamaciones");
+        } else if (text.includes('!')) {
+            formScore += 5;
+            details.push("Exclamación");
+        }
+        
+        // Signos de interrogación (restan energía)
+        const questionCount = (text.match(/\?{2,}/g) || []).length;
+        if (questionCount > 0) {
+            formScore -= questionCount * 6;
+            details.push("Múltiples dudas/interrogaciones");
+        }
+        
+        // Emojis positivos
+        const positiveEmojis = (text.match(/[❤️😊🎉🔥👍💪✨🎯🚀🥳😁😍⭐]/g) || []).length;
+        formScore += positiveEmojis * 6;
+        if (positiveEmojis > 0) details.push(`Emojis positivos x${positiveEmojis}`);
+        
+        // Emojis negativos
+        const negativeEmojis = (text.match(/[💢😡🤬😢💔😨😱👿]/g) || []).length;
+        formScore -= negativeEmojis * 8;
+        if (negativeEmojis > 0) details.push(`Emojis negativos x${negativeEmojis}`);
+        
+        return { score: Math.min(Math.max(formScore, -30), 40), details };
+    }
     
     function analyzeEmotion(text) {
         const lowerText = text.toLowerCase();
@@ -44,11 +110,10 @@ const VoidPulseCore = (function() {
             for (let kw of keywords) {
                 const regex = new RegExp(kw, 'gi');
                 const matches = (lowerText.match(regex) || []).length;
-                scores[emotion] += matches * 10;
+                scores[emotion] += matches * 12;
             }
         }
         
-        // Normalizar a máximo 100
         let maxScore = 0;
         let dominantEmotion = 'neutro';
         
@@ -59,37 +124,39 @@ const VoidPulseCore = (function() {
             }
         }
         
-        // Calcular manipulación emocional (cantidad de emociones mezcladas)
+        // Si no hay emoción dominante clara, se queda neutro
+        if (maxScore < 10) dominantEmotion = 'neutro';
+        
+        // Calcular manipulación (mezcla de emociones)
         let emotionCount = 0;
         for (let score of Object.values(scores)) {
-            if (score > 10) emotionCount++;
+            if (score > 15) emotionCount++;
         }
         const manipulationPercent = Math.min(emotionCount * 12, 80);
         
         return { dominant: dominantEmotion, manipulation: manipulationPercent, scores };
     }
     
-    function calculatePulseScore(text, emotionScores) {
-        let score = 50; // Base neutra
+    function calculatePulseScore(text, emotionScores, formScore) {
+        let score = 45; // Base más alta para que "hola" no sea tan bajo
         
-        // Ajustar según emoción dominante
+        // Ajuste por emoción dominante
         const emotions = emotionScores.scores;
-        if (emotions.alegria > 30) score += 20;
-        if (emotions.ira > 30) score += 15;
-        if (emotions.tristeza > 30) score -= 20;
-        if (emotions.miedo > 30) score -= 15;
-        if (emotions.confianza > 30) score += 25;
+        if (emotions.alegria > 20) score += 20;
+        if (emotions.ira > 20) score += 10;
+        if (emotions.tristeza > 20) score -= 25;
+        if (emotions.miedo > 20) score -= 15;
+        if (emotions.confianza > 20) score += 20;
+        if (emotions.sorpresa > 20) score += 15;
         
-        // Longitud del texto
+        // Ajuste por forma
+        score += formScore;
+        
+        // Ajuste por longitud de palabra
         const wordCount = text.split(/\s+/).length;
-        if (wordCount < 10) score -= 10;
-        if (wordCount > 200) score -= 5;
-        
-        // Emojis positivos/negativos
-        const positiveEmojis = (text.match(/[❤️😊🎉🔥👍💪✨🎯🚀]/g) || []).length;
-        const negativeEmojis = (text.match(/[💢😡🤬😢💔😨😱]/g) || []).length;
-        score += positiveEmojis * 5;
-        score -= negativeEmojis * 8;
+        if (wordCount === 1 && text.length < 10) {
+            score -= 5; // Palabras muy cortas como "hola" bajan un poco
+        }
         
         return Math.min(Math.max(Math.round(score), 0), 100);
     }
@@ -99,63 +166,73 @@ const VoidPulseCore = (function() {
         let riskScore = 0;
         
         for (let kw of BACKLASH_KEYWORDS) {
-            if (lowerText.includes(kw)) riskScore += 15;
+            if (lowerText.includes(kw)) riskScore += 18;
         }
         
-        // Detectar mayúsculas excesivas
-        const upperCount = (text.match(/[A-Z]{3,}/g) || []).length;
-        riskScore += upperCount * 5;
+        const upperCount = (text.match(/[A-Z]{5,}/g) || []).length;
+        riskScore += upperCount * 8;
         
-        // Detectar signos de exclamación excesivos
-        const exclamCount = (text.match(/!{2,}/g) || []).length;
-        riskScore += exclamCount * 10;
+        const exclamCount = (text.match(/!{3,}/g) || []).length;
+        riskScore += exclamCount * 12;
         
-        if (riskScore >= 50) return { level: "alto", score: Math.min(riskScore, 100) };
-        if (riskScore >= 25) return { level: "medio", score: riskScore };
+        if (riskScore >= 60) return { level: "alto", score: Math.min(riskScore, 100) };
+        if (riskScore >= 30) return { level: "medio", score: riskScore };
         return { level: "bajo", score: riskScore };
     }
     
     function calculateVirality(text) {
-        const lowerText = text.toLowerCase();
-        let score = 20; // Base
+        let score = 25;
         
         for (let kw of VIRAL_KEYWORDS) {
-            if (lowerText.includes(kw)) score += 15;
+            if (text.includes(kw)) score += 18;
         }
         
-        // Tiene hashtags
         const hashtags = (text.match(/#\w+/g) || []).length;
-        score += hashtags * 5;
+        score += hashtags * 6;
         
-        // Tiene menciones
         const mentions = (text.match(/@\w+/g) || []).length;
-        score += mentions * 3;
+        score += mentions * 4;
         
-        // Longitud óptima para viralidad (50-150 caracteres)
-        if (text.length >= 50 && text.length <= 150) score += 10;
+        if (text.length >= 50 && text.length <= 150) score += 12;
+        
+        if ((text.match(/[!?]{2,}/g) || []).length > 0) score += 8;
         
         return Math.min(Math.round(score), 100);
     }
     
-    function enhanceText(text) {
+    function enhanceTextIntelligently(text, emotion, pulseScore) {
         let enhanced = text;
         
-        // Añadir emojis si no tiene muchos
-        const emojiCount = (text.match(/[\u{1F300}-\u{1F9FF}]/gu) || []).length;
-        if (emojiCount < 2) {
-            enhanced = enhanced + ' 🔥';
+        // Limpiar espaciado
+        enhanced = enhanced.trim();
+        
+        // Si es muy corto, expandir
+        if (enhanced.length < 30 && !enhanced.includes('?')) {
+            if (emotion.dominant === 'alegria' || pulseScore > 60) {
+                enhanced = enhanced + " ¡Qué emoción! 🎉";
+            } else if (emotion.dominant === 'tristeza') {
+                enhanced = enhanced + " Ánimo, las cosas mejoran. 💪";
+            } else if (emotion.dominant === 'ira') {
+                enhanced = enhanced + " Tranquilo, vamos a resolverlo. 🧘";
+            } else {
+                enhanced = enhanced + " ¿Qué opinas? 👀";
+            }
         }
         
-        // Capitalizar palabras clave al inicio
-        const words = enhanced.split(' ');
-        if (words[0] && words[0][0]) {
-            words[0] = words[0][0].toUpperCase() + words[0].slice(1);
-            enhanced = words.join(' ');
+        // Capitalizar primera letra
+        if (enhanced[0]) {
+            enhanced = enhanced[0].toUpperCase() + enhanced.slice(1);
         }
         
-        // Añadir gancho al final si es muy corto
-        if (enhanced.length < 100) {
-            enhanced = enhanced + ' ¿Qué opinas?';
+        // Añadir punto final si no tiene
+        if (!enhanced.match(/[.!?]$/)) {
+            enhanced = enhanced + ".";
+        }
+        
+        // Si tiene emoción positiva y poca energía, añadir emoji
+        const emojiCount = (enhanced.match(/[\u{1F300}-\u{1F9FF}]/gu) || []).length;
+        if (emojiCount === 0 && (emotion.dominant === 'alegria' || pulseScore > 65)) {
+            enhanced = enhanced + " 🔥";
         }
         
         return enhanced;
@@ -174,28 +251,35 @@ const VoidPulseCore = (function() {
         }
         
         const emotionResults = analyzeEmotion(text);
-        const pulseScore = calculatePulseScore(text, emotionResults);
+        const formAnalysis = analyzeForm(text);
+        const pulseScore = calculatePulseScore(text, emotionResults, formAnalysis.score);
         const backlash = calculateBacklashRisk(text);
         const virality = calculateVirality(text);
-        const enhancedText = enhanceText(text);
+        const enhancedText = enhanceTextIntelligently(text, emotionResults, pulseScore);
         
         let recommendation = "";
-        if (pulseScore >= 70) recommendation = "Pulso alto. Ideal para contenido viral o llamativo.";
-        else if (pulseScore >= 40) recommendation = "Pulso medio. Buen contenido, puede mejorar.";
-        else recommendation = "Pulso bajo. El texto es plano o negativo. Revísalo.";
+        if (pulseScore >= 75) recommendation = "🔥 Pulso altísimo. Ideal para contenido viral o llamativo.";
+        else if (pulseScore >= 55) recommendation = "📈 Pulso bueno. El texto tiene energía positiva.";
+        else if (pulseScore >= 35) recommendation = "😐 Pulso neutral. Puedes darle más fuerza.";
+        else recommendation = "💤 Pulso bajo. El texto es plano o negativo. Revísalo.";
         
-        if (backlash.level === "alto") recommendation += " ⚠️ Alto riesgo de backlash. Ten cuidado.";
+        if (backlash.level === "alto") recommendation += " ⚠️ ALTO RIESGO de backlash. Ten cuidado.";
+        
+        let emotionDisplay = emotionResults.dominant;
+        if (emotionDisplay === 'neutro') emotionDisplay = 'Neutro';
+        else emotionDisplay = emotionDisplay.charAt(0).toUpperCase() + emotionDisplay.slice(1);
         
         return {
             pulseScore: pulseScore,
             emotion: {
-                dominant: emotionResults.dominant.charAt(0).toUpperCase() + emotionResults.dominant.slice(1),
+                dominant: emotionDisplay,
                 manipulation: emotionResults.manipulation
             },
             backlash: backlash,
             virality: virality,
             enhancedText: enhancedText,
-            recommendation: recommendation
+            recommendation: recommendation,
+            formDetails: formAnalysis.details
         };
     }
     
